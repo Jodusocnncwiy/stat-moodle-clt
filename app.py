@@ -33,22 +33,39 @@ num_simulations = st.sidebar.slider("3. 重複抽樣次數 (模擬次數)", min_
 st.title("📊 中心極限定理 (Central Limit Theorem) 互動探索")
 st.markdown("管理系學生的統計直覺：當樣本數 $n$ 夠大時，不論母體的分配為何，**樣本平均數的抽樣分配**都會趨近於**常態分配**。請調整左側參數親自驗證！")
 
-# 3. 生成母體數據與抽樣邏輯
+# 3. 定義各分配的理論值與生成模擬抽樣
 np.random.seed(42)
 
 if distribution == "常態分配 (Normal)":
+    # 理論值：Mean=5, SD=2
+    theoretical_pop_mean = 5.0
+    theoretical_pop_sd = 2.0
+    # 畫母體分配圖用的理論底數據
     pop_data = np.random.normal(loc=5.0, scale=2.0, size=10000)
     gen_sample = lambda size: np.random.normal(loc=5.0, scale=2.0, size=size)
 
 elif distribution == "均勻分配 (Uniform)":
+    # 理論值：在 [0, 10] 區間，Mean=(0+10)/2=5，SD=10/sqrt(12) ≒ 2.887
+    theoretical_pop_mean = 5.0
+    theoretical_pop_sd = 10.0 / np.sqrt(12)
     pop_data = np.random.uniform(0, 10, 10000)
     gen_sample = lambda size: np.random.uniform(0, 10, size)
 
 elif distribution == "指數分配 (Exponential)":
+    # 理論值：scale=2.0, Mean=2, SD=2
+    theoretical_pop_mean = 2.0
+    theoretical_pop_sd = 2.0
     pop_data = np.random.exponential(scale=2.0, size=10000)
     gen_sample = lambda size: np.random.exponential(scale=2.0, size=size)
 
 else: # 雙峰分配
+    # 兩個獨立常態 N(2, 0.8^2) 與 N(8, 0.8^2) 各佔 50% 的混合分配
+    # 理論 Mean = (2+8)/2 = 5
+    # 理論 Var = 0.5 * (0.8^2 + 2^2) + 0.5 * (0.8^2 + 8^2) - 5^2 = 0.64 + 9 = 9.64
+    # 理論 SD = sqrt(9.64) ≒ 3.105
+    theoretical_pop_mean = 5.0
+    theoretical_pop_sd = np.sqrt(9.64)
+    
     pop1 = np.random.normal(2, 0.8, 5000)
     pop2 = np.random.normal(8, 0.8, 5000)
     pop_data = np.concatenate([pop1, pop2])
@@ -56,22 +73,17 @@ else: # 雙峰分配
         p = np.random.binomial(size, 0.5)
         return np.concatenate([np.random.normal(2, 0.8, p), np.random.normal(8, 0.8, size-p)])
 
-# 計算母體的實際平均數與標準差
-pop_mean = np.mean(pop_data)
-pop_sd = np.std(pop_data)
-
-# 計算理論上的母體期望值
-theoretical_pop_mean = 2.0 if distribution == "指數分配 (Exponential)" else 5.0
-
-# 計算多次模擬的抽樣平均數
+# 4. 模擬抽樣分配（重複進行 num_simulations 次）
 sample_means = [np.mean(gen_sample(n)) for _ in range(num_simulations)]
 
-# 計算抽樣分配的實際平均數與標準差
-sm_mean = np.mean(sample_means)
-sm_sd = np.std(sample_means)
-theoretical_se = pop_sd / np.sqrt(n)
+# 計算模擬抽樣分配的統計量
+simulated_sm_mean = np.mean(sample_means)
+simulated_sm_sd = np.std(sample_means)
 
-# 4. 畫面佈局：左邊放母體，右邊放抽樣分配
+# 理論上的標準誤 (Standard Error) = 理論母體標準差 / sqrt(n)
+theoretical_se = theoretical_pop_sd / np.sqrt(n)
+
+# 5. 畫面佈局：左邊放母體，右邊放抽樣分配
 col1, col2 = st.columns(2)
 
 with col1:
@@ -81,12 +93,12 @@ with col1:
     fig1.update_layout(margin=dict(l=20, r=20, t=20, b=20), height=320, showlegend=False)
     st.plotly_chart(fig1, use_container_width=True)
     
+    # 呈現純淨的理論母體參數（無模擬誤差）
     st.markdown(f"""
     <div style="background-color: rgba(27, 54, 93, 0.05); padding: 15px; border-radius: 8px; border-left: 5px solid #1B365D;">
-        <h4 style="color: #1B365D; margin-top: 0; margin-bottom: 8px;">📊 母體參數值</h4>
-        <p style="margin: 4px 0; font-size: 15px; color: #333333;">母體理論平均數 (μ)：<b style="font-size: 18px; color: #1B365D;">{int(theoretical_pop_mean)}</b></p>
-        <p style="margin: 4px 0; font-size: 15px; color: #333333;">模擬母體平均數：<b>{pop_mean:.3f}</b></p>
-        <p style="margin: 4px 0; font-size: 15px; color: #333333;">模擬母體標準差 (σ)：<b>{pop_sd:.3f}</b></p>
+        <h4 style="color: #1B365D; margin-top: 0; margin-bottom: 8px;">📊 理論母體參數值（不變真理）</h4>
+        <p style="margin: 4px 0; font-size: 15px; color: #333333;">母體理論平均數 (μ)：<b style="font-size: 18px; color: #1B365D;">{theoretical_pop_mean:.3f}</b></p>
+        <p style="margin: 4px 0; font-size: 15px; color: #333333;">母體理論標準差 (σ)：<b>{theoretical_pop_sd:.3f}</b></p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -97,20 +109,21 @@ with col2:
     fig2.update_layout(margin=dict(l=20, r=20, t=20, b=20), height=320, showlegend=False)
     st.plotly_chart(fig2, use_container_width=True)
     
+    # 呈現模擬抽樣的統計量，並與左側理論值進行「理論 vs 模擬」的直接對照
     st.markdown(f"""
     <div style="background-color: rgba(27, 54, 93, 0.05); padding: 15px; border-radius: 8px; border-left: 5px solid #1B365D;">
-        <h4 style="color: #1B365D; margin-top: 0; margin-bottom: 8px;">📈 抽樣分配統計量</h4>
-        <p style="margin: 4px 0; font-size: 15px; color: #333333;">樣本平均數的平均數：<b>{sm_mean:.3f}</b> （理論上應接近 μ = {int(theoretical_pop_mean)}）</p>
-        <p style="margin: 4px 0; font-size: 15px; color: #333333;">樣本平均數的標準差 (標準誤)：<b>{sm_sd:.3f}</b> （理論上應為 σ / √n = {theoretical_se:.3f}）</p>
+        <h4 style="color: #1B365D; margin-top: 0; margin-bottom: 8px;">📈 抽樣分配模擬統計量（對照組）</h4>
+        <p style="margin: 4px 0; font-size: 15px; color: #333333;">樣本平均數的平均數 ($\overline{{\overline{{X}}}}$)：<b>{simulated_sm_mean:.3f}</b> （理論值 $\mu_X$ 應接近：{theoretical_pop_mean:.3f}）</p>
+        <p style="margin: 4px 0; font-size: 15px; color: #333333;">樣本平均數的模擬標準差：<b>{simulated_sm_sd:.3f}</b> （理論值 $\sigma_{\overline{{X}}}$ 應為 $\sigma/\sqrt{{n}}$ = {theoretical_se:.3f}）</p>
     </div>
     """, unsafe_allow_html=True)
 
-# 5. 動態引導文字與教學提示
+# 6. 動態引導文字與教學提示
 st.markdown("---")
 if n < 30:
     if distribution == "常態分配 (Normal)":
-        st.success(f"✨ **教學觀念**：當前 n = {n}。注意看下方數據！因為母體本身就是**常態分配**，抽樣分配的平均數（**{sm_mean:.3f}**）與標準差（**{sm_sd:.3f}**）不僅完美符合理論，且分佈形狀依然保持完美的常態。")
+        st.success(f"✨ **教學觀念**：當前 n = {n}。注意看下方數據！因為母體本身就是**常態分配**，抽樣分配的平均數（**{simulated_sm_mean:.3f}**）與標準差（**{simulated_sm_sd:.3f}**）不僅完美符合理論，且分佈形狀依然保持完美的常態。")
     else:
-        st.warning(f"⚠️ **教學觀念**：當前 n = {n} (< 30)。注意看右圖，因為樣本數不足，抽樣分配的形狀可能仍有些不對稱；但請觀察下方的數據，樣本平均數的平均數（**{sm_mean:.3f}**）已經非常接近母體理論平均數 **{int(theoretical_pop_mean)}** 了！")
+        st.warning(f"⚠️ **教學觀念**：當前 n = {n} (< 30)。注意看右圖，因為樣本數不足，抽樣分配的形狀可能仍有些不對稱；但請觀察下方的數據，樣本平均數的平均數（**{simulated_sm_mean:.3f}**）已經非常接近母體理論平均數 **{int(theoretical_pop_mean)}** 了！")
 else:
-    st.success(f"✨ **教學觀念**：當前 n = {n} (≥ 30，已達大樣本門檻！)。此時無論母體原先多偏斜，抽樣分配均已收斂為常態分配。請比對下方數據，您會發現抽樣標準差（**{sm_sd:.3f}**）精準縮小到接近理論值 **{theoretical_se:.3f}**！")
+    st.success(f"✨ **教學觀念**：當前 n = {n} (≥ 30，已達大樣本門檻！)。此時無論母體原先多偏斜，抽樣分配均已收斂為常態分配。請比對下方數據，您會發現抽樣標準差（**{simulated_sm_sd:.3f}**）精準縮小到接近理論值 **{theoretical_se:.3f}**！")
