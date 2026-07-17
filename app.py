@@ -56,7 +56,7 @@ with col2:
     st.plotly_chart(fig2, use_container_width=True)
     
     # 動態引導文字（Seeing Theory 的精髓）
-    if n < 10:
+    if n < 30:
         st.warning(f"⚠️ 當前 n = {n} (樣本數過小)。注意看右圖，它依然保有一些母體分配的影子（例如不對稱或雙峰），尚未完全變成鐘形曲線。")
     else:
         st.success(f"✨ 當前 n = {n} (樣本數充足)。觀察右圖！即使母體極度不對稱或呈雙峰，抽樣分佈已經完美呈現對稱的**鐘形正態分佈**！")
