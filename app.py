@@ -97,8 +97,8 @@ with col1:
     st.markdown(f"""
     <div style="background-color: rgba(27, 54, 93, 0.05); padding: 15px; border-radius: 8px; border-left: 5px solid #1B365D;">
         <h4 style="color: #1B365D; margin-top: 0; margin-bottom: 8px;">📊 理論母體參數值（不變真理）</h4>
-        <p style="margin: 4px 0; font-size: 15px; color: #333333;">母體理論平均數 (μ)：<b style="font-size: 18px; color: #1B365D;">{theoretical_pop_mean:.3f}</b></p>
-        <p style="margin: 4px 0; font-size: 15px; color: #333333;">母體理論標準差 (σ)：<b>{theoretical_pop_sd:.3f}</b></p>
+        <p style="margin: 4px 0; font-size: 15px; color: #333333;">母體理論平均數 (&mu;)：<b style="font-size: 18px; color: #1B365D;">{theoretical_pop_mean:.3f}</b></p>
+        <p style="margin: 4px 0; font-size: 15px; color: #333333;">母體理論標準差 (&sigma;)：<b>{theoretical_pop_sd:.3f}</b></p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -109,12 +109,12 @@ with col2:
     fig2.update_layout(margin=dict(l=20, r=20, t=20, b=20), height=320, showlegend=False)
     st.plotly_chart(fig2, use_container_width=True)
     
-    # 呈現模擬抽樣的統計量，並與左側理論值進行「理論 vs 模擬」的直接對照
+    # 呈現模擬抽樣的統計量，使用安全 HTML 實體符號避免反斜線報錯
     st.markdown(f"""
     <div style="background-color: rgba(27, 54, 93, 0.05); padding: 15px; border-radius: 8px; border-left: 5px solid #1B365D;">
         <h4 style="color: #1B365D; margin-top: 0; margin-bottom: 8px;">📈 抽樣分配模擬統計量（對照組）</h4>
-        <p style="margin: 4px 0; font-size: 15px; color: #333333;">樣本平均數的平均數 ($\overline{{\overline{{X}}}}$)：<b>{simulated_sm_mean:.3f}</b> （理論值 $\mu_X$ 應接近：{theoretical_pop_mean:.3f}）</p>
-        <p style="margin: 4px 0; font-size: 15px; color: #333333;">樣本平均數的模擬標準差：<b>{simulated_sm_sd:.3f}</b> （理論值 $\sigma_{\overline{{X}}}$ 應為 $\sigma/\sqrt{{n}}$ = {theoretical_se:.3f}）</p>
+        <p style="margin: 4px 0; font-size: 15px; color: #333333;">樣本平均數的平均數 (x̄)：<b>{simulated_sm_mean:.3f}</b> （理論值 &mu;<sub>X̄</sub> 應接近：{theoretical_pop_mean:.3f}）</p>
+        <p style="margin: 4px 0; font-size: 15px; color: #333333;">樣本平均數的模擬標準差：<b>{simulated_sm_sd:.3f}</b> （理論值 &sigma;<sub>X̄</sub> 應為 &sigma;/&radic;n = {theoretical_se:.3f}）</p>
     </div>
     """, unsafe_allow_html=True)
 
